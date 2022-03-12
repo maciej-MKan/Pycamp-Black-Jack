@@ -32,6 +32,8 @@ class Deck:
         self.shuffle_cards()
         
     def _create_deck(self):
+        """_summary_
+        """
         for color in color_list:
             for figure in figure_list:
                 self._card_deck.append(f'{color}_{figure}')
@@ -68,12 +70,6 @@ class Player():
     def __int__(self) -> int:
         return self.get_cards_value()
 
-    def play(self):
-        if len(self.stored_cards):
-            self.draw_card()
-        else:
-            self.first_run()
-
     def first_run(self):
         self.stored_cards.append(self.deck.get_card())
         self.stored_cards.append(self.deck.get_card())
@@ -93,17 +89,23 @@ class Game:
         self.player.deck = self.croupier.deck
 
     def first_run(self):
-        self.player.play()
-        self.croupier.play()
+        self.player.first_run()
+        if int(self.player) >= 21:
+            raise Exception
+        self.croupier.first_run()
         return self.player.stored_cards, self.croupier.stored_cards[0]
 
     def player_run(self):
-        self.player.play()
+        self.player.draw_card()
+        if int(self.player) > 21:
+            raise Exception
         return self.player.stored_cards
 
     def croupier_run(self):
-        while int(self.croupier) < int(self.player):
-            self.croupier.play()
+        while int(self.croupier) <= int(self.player):
+            self.croupier.draw_card()
+            if int(self.croupier) >21:
+                raise Exception
         return self.croupier.stored_cards
 
 if __name__ == '__main__':
@@ -111,12 +113,26 @@ if __name__ == '__main__':
     player = Player()
     krupier = Player()
     game = Game(krupier, player)
-    player_cards, krupier_card = game.first_run()
-    print(f'Masz {player_cards} , krupier ma {krupier_card} ')
-    draw_next = input('dobierasz kartę? (t/n) ')
-    
-    while draw_next == 't':
-        print(f'Masz {game.player_run()} , {int(player)} ')
-        draw_next = input('dobierasz kartę? (t/n) ')
-    
-    print(f'krupier ma {game.croupier_run()} , {int(krupier)} ')
+    try:
+        player_cards, krupier_card = game.first_run()
+    except:
+        print('!!!BLACK JACK!!!')
+    else:
+        try:
+            print(f'Masz {player_cards} , krupier ma {krupier_card} ')
+            draw_next = input('dobierasz kartę? (t/n) ')
+        except:
+            print('Przegrywasz')
+        else:
+            try:
+                while draw_next == 't':
+                    print(f'Masz {game.player_run()} , {int(player)} ')
+                    draw_next = input('dobierasz kartę? (t/n) ')
+            
+                print(f'krupier ma {game.croupier_run()} , {int(krupier)} ')
+                if int(krupier) > int(player):
+                    print('Przegrywasz')
+                else:
+                    print('WYGRYWASZ')
+            except:
+                print('Wygrywasz')
