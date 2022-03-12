@@ -2,19 +2,16 @@
 # -*- encoding: utf-8 -*-
 # -*- coding: utf-8 -*- 
 
-"""_summary_
+"""Backjack game simulator."""
 
-    Returns:
-        _type_: _description_
-    """
 from random import shuffle
 
 color_list = ['serce', 'karo', 'pik', 'trefl']
 figure_list = ['2','3','4','5','6','7','8','9','10','walet','dama','król','as']
 
 class Card:
-    """_summary_
-    """
+    """A class that describes a playing card."""
+
     def __init__(self, color, figure) -> None:
         self.color = color
         self.figure = figure
@@ -24,7 +21,8 @@ class Card:
         return f'{self.figure}_{self.color}'
 
 class Deck:
-    """_summary_
+    """A class that creates a deck of cards from a list of figures and colors.
+Performs shuffling methods and takes a card from the deck.
     """
     def __init__(self) -> None:
         self._card_deck = []
@@ -32,7 +30,7 @@ class Deck:
         self.shuffle_cards()
         
     def _create_deck(self):
-        """_summary_
+        """Creates the deck
         """
         for color in color_list:
             for figure in figure_list:
@@ -40,28 +38,30 @@ class Deck:
                 self._card_deck[-1] = Card(color, figure)
 
     def get_card(self):
-        """_summary_
+        """Takes a card
 
         Returns:
-            _type_: _description_
+            Card: first cart from deck.
         """
         return self._card_deck.pop()
 
     def shuffle_cards(self):
-        """_summary_
-        """
+        """Shuffle deck"""
         shuffle(self._card_deck)
 
     def get_deck(self):
-        """_summary_
+        """Takes all of deck
 
         Returns:
-            _type_: _description_
+            list[card]: list of all cards in the deck
         """
         return self._card_deck
 
 class Player():
-    """_summary_
+    """The class creates a player, stores the cards they have collected,
+allows them to take cards for 1 and further turns,
+and calculates the value of the cards they have collected.
+Class value (int) returns the value of the player's cards.
     """
     def __init__(self) -> None:
         self.stored_cards = []
@@ -71,16 +71,29 @@ class Player():
         return self.get_cards_value()
 
     def first_run(self):
+    """The course of the player's first turn"""
+
         self.stored_cards.append(self.deck.get_card())
         self.stored_cards.append(self.deck.get_card())
 
     def draw_card(self):
+    """The corse of player's next turn"""
         self.stored_cards.append(self.deck.get_card())
 
     def get_cards_value(self):
+    """Calculate value of player's card
+
+    Returns:
+        int: sum values of player's catds
+    """
         return sum([card.value for card in self.stored_cards])
 
 class Game:
+    """The class that carries out the course of the game
+    
+    Args:
+        Player class instances for the dealer and the user
+    """
 
     def __init__(self, croupier, player) -> None:
         self.croupier = croupier
@@ -89,6 +102,7 @@ class Game:
         self.player.deck = self.croupier.deck
 
     def first_run(self):
+    """The course of the first round of the game"""
         self.player.first_run()
         if int(self.player) >= 21:
             raise Exception
@@ -96,12 +110,22 @@ class Game:
         return self.player.stored_cards, self.croupier.stored_cards[0]
 
     def player_run(self):
+    """The player's next turns
+    
+    Returns:
+        list[Card]: player's stored cards
+    """
         self.player.draw_card()
         if int(self.player) > 21:
             raise Exception
         return self.player.stored_cards
 
     def croupier_run(self):
+    """The croupier's next turn
+    
+    Returns:
+        list[Card]: croupier's stored cards
+    """
         while int(self.croupier) <= int(self.player):
             self.croupier.draw_card()
             if int(self.croupier) >21:
