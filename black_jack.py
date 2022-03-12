@@ -28,7 +28,7 @@ Performs shuffling methods and takes a card from the deck.
         self._card_deck = []
         self._create_deck()
         self.shuffle_cards()
-        
+
     def _create_deck(self):
         """Creates the deck
         """
@@ -65,44 +65,43 @@ Class value (int) returns the value of the player's cards.
     """
     def __init__(self) -> None:
         self.stored_cards = []
-        self.deck = []
+        self.deck = Deck()
 
     def __int__(self) -> int:
         return self.get_cards_value()
 
     def first_run(self):
-    """The course of the player's first turn"""
+        """The course of the player's first turn"""
 
         self.stored_cards.append(self.deck.get_card())
         self.stored_cards.append(self.deck.get_card())
 
     def draw_card(self):
-    """The corse of player's next turn"""
+        """The corse of player's next turn"""
         self.stored_cards.append(self.deck.get_card())
 
     def get_cards_value(self):
-    """Calculate value of player's card
+        """Calculate value of player's card
 
-    Returns:
-        int: sum values of player's catds
-    """
+        Returns:
+            int: sum values of player's catds
+        """
         return sum([card.value for card in self.stored_cards])
 
 class Game:
     """The class that carries out the course of the game
-    
+
     Args:
         Player class instances for the dealer and the user
     """
 
-    def __init__(self, croupier, player) -> None:
+    def __init__(self, croupier, human) -> None:
         self.croupier = croupier
-        self.player = player
-        self.croupier.deck = Deck()
+        self.player = human
         self.player.deck = self.croupier.deck
 
     def first_run(self):
-    """The course of the first round of the game"""
+        """The course of the first round of the game"""
         self.player.first_run()
         if int(self.player) >= 21:
             raise Exception
@@ -110,22 +109,22 @@ class Game:
         return self.player.stored_cards, self.croupier.stored_cards[0]
 
     def player_run(self):
-    """The player's next turns
-    
-    Returns:
-        list[Card]: player's stored cards
-    """
+        """The player's next turns
+
+        Returns:
+            list[Card]: player's stored cards
+        """
         self.player.draw_card()
         if int(self.player) > 21:
             raise Exception
         return self.player.stored_cards
 
     def croupier_run(self):
-    """The croupier's next turn
-    
-    Returns:
-        list[Card]: croupier's stored cards
-    """
+        """The croupier's next turn
+
+        Returns:
+            list[Card]: croupier's stored cards
+        """
         while int(self.croupier) <= int(self.player):
             self.croupier.draw_card()
             if int(self.croupier) >21:
@@ -139,24 +138,24 @@ if __name__ == '__main__':
     game = Game(krupier, player)
     try:
         player_cards, krupier_card = game.first_run()
-    except:
+    except Exception:
         print('!!!BLACK JACK!!!')
     else:
         try:
             print(f'Masz {player_cards} , krupier ma {krupier_card} ')
             draw_next = input('dobierasz kartę? (t/n) ')
-        except:
+        except Exception:
             print('Przegrywasz')
         else:
             try:
                 while draw_next == 't':
                     print(f'Masz {game.player_run()} , {int(player)} ')
                     draw_next = input('dobierasz kartę? (t/n) ')
-            
+
                 print(f'krupier ma {game.croupier_run()} , {int(krupier)} ')
                 if int(krupier) > int(player):
                     print('Przegrywasz')
                 else:
                     print('WYGRYWASZ')
-            except:
+            except Exception:
                 print('Wygrywasz')
