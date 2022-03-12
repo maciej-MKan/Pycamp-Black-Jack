@@ -8,7 +8,6 @@
         _type_: _description_
     """
 from random import shuffle
-from abc import ABC, abstractmethod
 
 color_list = ['serce', 'karo', 'pik', 'trefl']
 figure_list = ['2','3','4','5','6','7','8','9','10','walet','dama','król','as']
@@ -59,64 +58,65 @@ class Deck:
         """
         return self._card_deck
 
-class Player(ABC):
+class Player():
     """_summary_
     """
-    def __init__(self, deck) -> None:
-        self._stored_cards = []
-        self.deck = deck
+    def __init__(self) -> None:
+        self.stored_cards = []
+        self.deck = []
 
     def __int__(self) -> int:
         return self.get_cards_value()
 
-    def first_run(self):
-        self._stored_cards.append(self.deck.get_card())
-        self._stored_cards.append(self.deck.get_card())
-
     def play(self):
-        if len(self._stored_cards):
+        if len(self.stored_cards):
             self.draw_card()
         else:
             self.first_run()
 
+    def first_run(self):
+        self.stored_cards.append(self.deck.get_card())
+        self.stored_cards.append(self.deck.get_card())
+
+    def draw_card(self):
+        self.stored_cards.append(self.deck.get_card())
+
     def get_cards_value(self):
-        return sum([card.value for card in self._stored_cards])
+        return sum([card.value for card in self.stored_cards])
 
-    @abstractmethod
-    def draw_card():
-        pass
+class Game:
 
-class Human(Player):
-    """_summary_
+    def __init__(self, croupier, player) -> None:
+        self.croupier = croupier
+        self.player = player
+        self.croupier.deck = Deck()
+        self.player.deck = self.croupier.deck
 
-    Args:
-        Player (_type_): _description_
-    """
-    def __init__(self,deck) -> None:
-        super().__init__(deck)
+    def first_run(self):
+        self.player.play()
+        self.croupier.play()
+        return self.player.stored_cards, self.croupier.stored_cards[0]
 
-    def draw_card(self):
-        self._stored_cards.append(self.deck.get_card())
-    
-class Croupier(Player):
-    def __init__(self,deck) -> None:
-        super().__init__(deck)
+    def player_run(self):
+        self.player.play()
+        return self.player.stored_cards
 
-    def draw_card(self):
-        self._stored_cards.append(self.deck.get_card())
-
+    def croupier_run(self):
+        while int(self.croupier) < int(self.player):
+            self.croupier.play()
+        return self.croupier.stored_cards
 
 if __name__ == '__main__':
 
-    deck = Deck()
-    player = Human(deck)
-    krupier = Croupier(deck)
-    draw_next = 't'
-    while draw_next == 't':
-        player.play()
-        print(f'Masz {player.get_cards_value()} , {player._stored_cards}')
-        draw_next = input('dobrać kartę (t/n)? ')
+    player = Player()
+    krupier = Player()
+    game = Game(krupier, player)
+    player_cards, krupier_card = game.first_run()
+    print(f'Masz {player_cards} , krupier ma {krupier_card} ')
+    draw_next = input('dobierasz kartę? (t/n) ')
     
-    while int(krupier) < int(player):
-        krupier.play()
-    print(f'krupier ma {krupier.get_cards_value()} , {krupier._stored_cards}')
+    while draw_next == 't':
+        print(f'Masz {game.player_run()} , {int(player)} ')
+        draw_next = input('dobierasz kartę? (t/n) ')
+    
+    print(f'krupier ma {game.croupier_run()} , {int(krupier)} ')
