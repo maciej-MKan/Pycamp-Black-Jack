@@ -5,9 +5,19 @@
 """Backjack game simulator."""
 
 from random import shuffle
+from card_settings import color_list, figure_list, value_list
 
-color_list = ['serce', 'karo', 'pik', 'trefl']
-figure_list = ['2','3','4','5','6','7','8','9','10','walet','dama','król','as']
+class OverTwentyOne(Exception):
+    """Exception class"""
+    def __init__(self, player_obiect, *args: object) -> None:
+        super().__init__(*args)
+        self.player = player_obiect
+
+    def __str__(self):
+        return f'{self.player.name} przekroczył 21 punktów.'
+
+class BlackJack(Exception):
+    """Exception when player has 21 points"""
 
 class Card:
     """A class that describes a playing card."""
@@ -15,7 +25,7 @@ class Card:
     def __init__(self, color, figure) -> None:
         self.color = color
         self.figure = figure
-        self.value = figure_list.index(figure) + 2
+        self.value = value_list[figure_list.index(figure)]
 
     def __repr__(self) -> str:
         return f'{self.figure}_{self.color}'
@@ -63,9 +73,10 @@ allows them to take cards for 1 and further turns,
 and calculates the value of the cards they have collected.
 Class value (int) returns the value of the player's cards.
     """
-    def __init__(self) -> None:
+    def __init__(self, name) -> None:
         self.stored_cards = []
         self.deck = Deck()
+        self.name = name
 
     def __int__(self) -> int:
         return self.get_cards_value()
@@ -81,12 +92,16 @@ Class value (int) returns the value of the player's cards.
         self.stored_cards.append(self.deck.get_card())
 
     def get_cards_value(self):
-        """Calculate value of player's card
+        """Calculate value of player's cards
 
         Returns:
             int: sum values of player's catds
         """
-        return sum([card.value for card in self.stored_cards])
+        cards_value = sum([card.value for card in self.stored_cards])
+        if [True for card in self.stored_cards if card.figure.upper() == 'AS'] and cards_value < 21:
+            cards_value +=10
+
+        return cards_value
 
 class Game:
     """The class that carries out the course of the game
@@ -103,8 +118,8 @@ class Game:
     def first_run(self):
         """The course of the first round of the game"""
         self.player.first_run()
-        if int(self.player) >= 21:
-            raise Exception
+        if int(self.player) == 21:
+            raise BlackJack('Black Jack! Wygrywasz')
         self.croupier.first_run()
         return self.player.stored_cards, self.croupier.stored_cards[0]
 
@@ -116,7 +131,7 @@ class Game:
         """
         self.player.draw_card()
         if int(self.player) > 21:
-            raise Exception
+            raise OverTwentyOne(self.player)
         return self.player.stored_cards
 
     def croupier_run(self):
@@ -125,27 +140,29 @@ class Game:
         Returns:
             list[Card]: croupier's stored cards
         """
-        while int(self.croupier) <= int(self.player):
+        while int(self.croupier) <= 16:
             self.croupier.draw_card()
-            if int(self.croupier) >21:
-                raise Exception
+            if int(self.croupier) > 21:
+                raise OverTwentyOne(self.croupier)
         return self.croupier.stored_cards
 
 if __name__ == '__main__':
 
-    player = Player()
-    krupier = Player()
+    player = Player('Gracz')
+    krupier = Player('Krupier')
     game = Game(krupier, player)
     try:
         player_cards, krupier_card = game.first_run()
-    except Exception:
-        print('!!!BLACK JACK!!!')
+    except BlackJack as message:
+        print(message)
+        print(player.stored_cards)
     else:
         try:
-            print(f'Masz {player_cards} , krupier ma {krupier_card} ')
+            print(f'Masz {player_cards} {int(player)}, krupier ma {krupier_card} {int(krupier)}')
             draw_next = input('dobierasz kartę? (t/n) ')
-        except Exception:
-            print('Przegrywasz')
+        except OverTwentyOne as message:
+            print(message)
+            print(player.stored_cards)
         else:
             try:
                 while draw_next == 't':
@@ -157,5 +174,5 @@ if __name__ == '__main__':
                     print('Przegrywasz')
                 else:
                     print('WYGRYWASZ')
-            except Exception:
-                print('Wygrywasz')
+            except OverTwentyOne as message:
+                print(message)
