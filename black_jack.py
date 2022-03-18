@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
 """Backjack game simulator."""
 
@@ -9,16 +9,16 @@ from random import shuffle
 from card_settings import color_list, figure_list, value_list
 
 class OverTwentyOne(Exception):
-    """Exception class"""
-    def __init__(self, player_obiect, *args: object) -> None:
-        super().__init__(*args)
-        self.player = player_obiect
-
-    def __str__(self):
-        return f'{self.player.name} przekroczył 21 punktów.'
+    """Exception class over 21"""
+    def __init__(self, player) -> None:
+        super().__init__(player)
+        self.stored_cards = player.stored_cards
 
 class BlackJack(Exception):
     """Exception when player has 21 points"""
+    def __init__(self, player) -> None:
+        super().__init__(player)
+        self.stored_cards = player.stored_cards
 
 @dataclass(repr=False, frozen=True)
 class Card:
@@ -32,7 +32,7 @@ class Card:
         object.__setattr__(self, 'value', value_list[figure_list.index(self.figure)])
 
     def __repr__(self) -> str:
-        return f'{self.figure} _ {self.color}'
+        return f'{self.figure}_{self.color}'
 
 class Deck:
     """A class that creates a deck of cards from a list of figures and colors.
@@ -85,6 +85,9 @@ Class value (int) returns the value of the player's cards.
     def __int__(self) -> int:
         return Game.calculate_card_value(self)
 
+    def __str__(self) -> str:
+        return self.name
+
     def draw_card(self):
         """The corse of player's next turn"""
         self.stored_cards.append(self.deck.get_card())
@@ -100,39 +103,54 @@ class Game:
         self.croupier : Player = croupier
         self.human : Player = human
 
-    def first_run(self):
-        """The course of the first round of the game
+    def run(self, input_foo, msg : str):
+        """The course of game tour
 
-        Returns:
-            tupe(list[Card]): collected player's cards, one of the dealer's cards
+        Args:
+            input_foo (funkcjon): input data funkcjon
+            msg (str): message for input_foo
+
+        Yields:
+            list[Card], list[Card]: lists of player and croupier stored cards
         """
+        if not self.human.stored_cards:
+            self.first_run()
+            yield self.human.stored_cards, self.croupier.stored_cards[0]
+        while input_foo(msg) != 'n':
+            self.player_run()
+            yield self.human.stored_cards, self.croupier.stored_cards[0]
+        self.croupier_run()
+
+    def first_run(self):
+        """The course of the first round of the game"""
         for player in [self.human, self.croupier]:
             player.draw_card()
             player.draw_card()
-        return self.human.stored_cards, self.croupier.stored_cards[0]
+            if int(self.human) >= 21:
+                raise BlackJack(self.human)
 
     def player_run(self):
-        """The player's next turns
-
-        Returns:
-            list[Card]: player's stored cards
-        """
+        """The player's next turns"""
         self.human.draw_card()
         if int(self.human) > 21:
             raise OverTwentyOne(self.human)
-        return self.human.stored_cards
 
     def croupier_run(self):
-        """The croupier's next turn
-
-        Returns:
-            list[Card]: croupier's stored cards
-        """
+        """The croupier's next turn"""
         while int(self.croupier) <= 16:
             self.croupier.draw_card()
             if int(self.croupier) > 21:
                 raise OverTwentyOne(self.croupier)
-        return self.croupier.stored_cards
+
+    def check_winner(self):
+        """method for checking who is winner
+
+        Returns:
+            Player: player with higest value of points
+        """
+        players = [self.human, self.croupier]
+        players.sort(key=int)
+        return players[-1]
 
     @staticmethod
     def calculate_card_value(player : Player):
@@ -145,11 +163,9 @@ class Game:
             int: sum values of cards stored by player
         """
         cards_value = sum([card.value for card in player.stored_cards])
-        if [True for card in player.stored_cards if card.figure.upper() == 'AS']\
+        if [True for card in player.stored_cards if card.figure.upper() == 'A']\
          and cards_value <= 11:
             cards_value +=10
-        if cards_value == 21:
-                raise BlackJack(f'Black Jack! {player.name} wygrywa')
         return cards_value
 
 if __name__ == '__main__':
@@ -157,29 +173,16 @@ if __name__ == '__main__':
     gracz = Player('Gracz')
     krupier = Player('Krupier')
     game = Game(krupier, gracz)
-    try:
-        player_cards, krupier_card = game.first_run()
-    except BlackJack as message:
-        print(message)
-        print(gracz.stored_cards)
-    else:
-        try:
-            print(f'Masz {player_cards} {int(gracz)}, krupier ma {krupier_card} {int(krupier)}')
-            draw_next = input('dobierasz kartę? (t/n) ')
-        except OverTwentyOne as message:
-            print(message)
-            print(gracz.stored_cards)
-        else:
-            try:
-                while draw_next == 't':
-                    print(f'Masz {game.player_run()} , {int(gracz)} ')
-                    draw_next = input('dobierasz kartę? (t/n) ')
 
-                print(f'krupier ma {game.croupier_run()} , {int(krupier)} ')
-                if int(krupier) > int(gracz):
-                    print('Przegrywasz')
-                else:
-                    print('WYGRYWASZ')
-            except OverTwentyOne as message:
-                print(message)
-                print(gracz.stored_cards)
+    try:
+        for player_cards, krupier_card in game.run(input, 'dobierasz kartę? (t/n) '):
+            print(f'Masz {player_cards}, krupier ma {krupier_card}')
+    except BlackJack as lucky_player:
+        print(f'{lucky_player} ma 21. Wygrywa')
+        print(lucky_player.stored_cards)
+    except OverTwentyOne as lost_player:
+        print(f'{lost_player} przekroczył 21. Przegrywa', end=' ')
+        print(lost_player.stored_cards)
+    else:
+        print(f'Masz {gracz.stored_cards}, krupier ma {krupier.stored_cards}')
+        print(f'{game.check_winner()} zdobył więcej punktów. Wygrywa')
