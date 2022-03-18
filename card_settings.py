@@ -1,3 +1,3 @@
-color_list = ['serce', 'karo', 'pik', 'trefl']
-figure_list = ['2','3','4','5','6','7','8','9','10','walet','dama','król','AS']
+color_list = ['♥', '♦', '♠', '♣']
+figure_list = ['2','3','4','5','6','7','8','9','10','J','Q','K','A']
 value_list = [2,3,4,5,6,7,8,9,10,10,10,10,1]
