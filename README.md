@@ -5,7 +5,7 @@ A simple simulator for playing the popular BlackJack card game.
 The program allows you to play a game between a player and a dealer according to standard rules.
 
 ## Technologies
-Program został stworzony w Pythonie 3.8 z wykorzystaniem bibliotek random oraz dataclass.
+The program was created in Python 3.8 using the random and dataclass libraries.
 
 ## Setup
 To run the project, enter:
